@@ -72,7 +72,7 @@ func tokenize(expr string) ([]Token, error) {
 			i++
 		}
 		if start == i {
-			return 0, fmt.Errorf("invalid number")
+			return 0, fmt.Errorf("expected number")
 		}
 		return strconv.ParseFloat(prefix+expr[start:i], 64)
 	}
@@ -118,6 +118,14 @@ func tokenize(expr string) ([]Token, error) {
 		i++
 	}
 
+	// validate: expression must start and end with a number
+	if len(tokens) > 0 && !tokens[0].IsNumber {
+		return nil, fmt.Errorf("invalid expression")
+	}
+	if len(tokens) > 0 && !tokens[len(tokens)-1].IsNumber {
+		return nil, fmt.Errorf("invalid expression")
+	}
+
 	return tokens, nil
 }
 
@@ -141,9 +149,10 @@ func evaluate(expr string) (float64, error) {
 			if tokens[i].Op == '*' {
 				result = left * right
 			} else {
-				if right != 0 {
-					result = left / right
+				if right == 0 {
+					return 0, fmt.Errorf("division by zero")
 				}
+				result = left / right
 			}
 			pass1[len(pass1)-1] = Token{IsNumber: true, Value: result}
 			i++ // skip the number we just consumed
