@@ -54,21 +54,12 @@ func sendError(w http.ResponseWriter, msg string, code int) {
 	json.NewEncoder(w).Encode(Response{Error: msg})
 }
 
-// Tokenizer
-
-type TokenType int
-
-const (
-	NUMBER TokenType = iota
-	PLUS
-	MINUS
-	MULTIPLY
-	DIVIDE
-)
-
+// Token represents either a number or an operator.
+// Op is '+', '-', '*', '/' for operators; 0 for numbers.
 type Token struct {
-	Type  TokenType
-	Value float64
+	IsNumber bool
+	Op       byte
+	Value    float64
 }
 
 func tokenize(expr string) ([]Token, error) {
@@ -81,7 +72,7 @@ func tokenize(expr string) ([]Token, error) {
 			i++
 		}
 		if start == i {
-			return 0, fmt.Errorf("invalid expression")
+			return 0, fmt.Errorf("invalid number")
 		}
 		return strconv.ParseFloat(prefix+expr[start:i], 64)
 	}
@@ -97,30 +88,30 @@ func tokenize(expr string) ([]Token, error) {
 		if (ch >= '0' && ch <= '9') || ch == '.' {
 			num, err := readNumber("")
 			if err != nil {
-				return nil, fmt.Errorf("invalid number")
+				return nil, err
 			}
-			tokens = append(tokens, Token{Type: NUMBER, Value: num})
+			tokens = append(tokens, Token{IsNumber: true, Value: num})
 			continue
 		}
 
 		switch ch {
 		case '+':
-			tokens = append(tokens, Token{Type: PLUS})
+			tokens = append(tokens, Token{Op: '+'})
 		case '-':
-			if len(tokens) == 0 || tokens[len(tokens)-1].Type != NUMBER {
+			if len(tokens) == 0 || !tokens[len(tokens)-1].IsNumber {
 				i++
 				num, err := readNumber("-")
 				if err != nil {
-					return nil, fmt.Errorf("invalid number")
+					return nil, err
 				}
-				tokens = append(tokens, Token{Type: NUMBER, Value: num})
+				tokens = append(tokens, Token{IsNumber: true, Value: num})
 				continue
 			}
-			tokens = append(tokens, Token{Type: MINUS})
+			tokens = append(tokens, Token{Op: '-'})
 		case '*':
-			tokens = append(tokens, Token{Type: MULTIPLY})
+			tokens = append(tokens, Token{Op: '*'})
 		case '/':
-			tokens = append(tokens, Token{Type: DIVIDE})
+			tokens = append(tokens, Token{Op: '/'})
 		default:
 			return nil, fmt.Errorf("invalid character")
 		}
@@ -130,15 +121,7 @@ func tokenize(expr string) ([]Token, error) {
 	return tokens, nil
 }
 
-// Flat 2-pass evaluator — no recursion, no precedence climbing.
-//
-// Pass 1: scan left to right, collapse * and / immediately.
-// Pass 2: scan left to right, collapse + and -.
-//
-// Example: "2 + 3 * 4 - 1"
-//   tokens: [2, +, 3, *, 4, -, 1]
-//   pass1:  [2, +, 12, -, 1]      (3*4=12)
-//   pass2:  14                     (2+12-1)
+// Flat 2-pass evaluator.
 func evaluate(expr string) (float64, error) {
 	tokens, err := tokenize(expr)
 	if err != nil {
@@ -151,18 +134,18 @@ func evaluate(expr string) (float64, error) {
 	// Pass 1: handle * and /
 	var pass1 []Token
 	for i := 0; i < len(tokens); i++ {
-		if tokens[i].Type == MULTIPLY || tokens[i].Type == DIVIDE {
+		if tokens[i].Op == '*' || tokens[i].Op == '/' {
 			left := pass1[len(pass1)-1].Value
 			right := tokens[i+1].Value
 			var result float64
-			if tokens[i].Type == MULTIPLY {
+			if tokens[i].Op == '*' {
 				result = left * right
 			} else {
 				if right != 0 {
 					result = left / right
 				}
 			}
-			pass1[len(pass1)-1] = Token{Type: NUMBER, Value: result}
+			pass1[len(pass1)-1] = Token{IsNumber: true, Value: result}
 			i++ // skip the number we just consumed
 		} else {
 			pass1 = append(pass1, tokens[i])
@@ -172,10 +155,9 @@ func evaluate(expr string) (float64, error) {
 	// Pass 2: handle + and -
 	result := pass1[0].Value
 	for i := 1; i < len(pass1); i += 2 {
-		switch pass1[i].Type {
-		case PLUS:
+		if pass1[i].Op == '+' {
 			result += pass1[i+1].Value
-		case MINUS:
+		} else {
 			result -= pass1[i+1].Value
 		}
 	}
