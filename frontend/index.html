@@ -52,6 +52,11 @@
       line-height: 1.2;
     }
 
+    .result.error {
+      font-size: 16px;
+      color: #eb5757;
+    }
+
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -106,7 +111,7 @@
       <div class="result" id="result">0</div>
     </div>
     <div class="buttons">
-      <button class="ac" data-action="clear">AC</button>
+      <button class="ac zero" data-action="clear">AC</button>
       <button data-action="backspace">⌫</button>
       <button class="operator" data-value="/">÷</button>
       <button data-value="7">7</button>

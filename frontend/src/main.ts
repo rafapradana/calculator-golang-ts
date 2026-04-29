@@ -6,7 +6,17 @@ const OPERATORS = ["+", "-", "*", "/"];
 let expression = "";
 let lastResult: string | null = null;
 
+function showError(msg: string): void {
+  resultEl.textContent = msg;
+  resultEl.classList.add("error");
+}
+
+function clearError(): void {
+  resultEl.classList.remove("error");
+}
+
 function updateDisplay(): void {
+  clearError();
   expressionEl.textContent = expression;
 }
 
@@ -76,7 +86,7 @@ async function calculate(): Promise<void> {
     const data = await response.json();
 
     if (data.error) {
-      resultEl.textContent = "Error";
+      showError(data.error);
       lastResult = null;
       return;
     }
@@ -86,7 +96,7 @@ async function calculate(): Promise<void> {
     resultEl.textContent = formatted;
     lastResult = formatted;
   } catch {
-    resultEl.textContent = "Error";
+    showError("network error");
     lastResult = null;
   }
 }
