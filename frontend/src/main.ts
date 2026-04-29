@@ -13,7 +13,7 @@ function updateDisplay(): void {
 function appendValue(value: string): void {
   const lastChar = expression.slice(-1);
 
-  if (lastResult !== null && !OPERATORS.includes(value) && value !== "(") {
+  if (lastResult !== null && !OPERATORS.includes(value)) {
     expression = "";
     lastResult = null;
   }
@@ -98,6 +98,11 @@ document.querySelectorAll("button").forEach((button) => {
       return;
     }
 
+    if (button.dataset.action === "backspace") {
+      backspace();
+      return;
+    }
+
     if (button.dataset.action === "calculate") {
       calculate();
       return;
@@ -113,8 +118,6 @@ document.addEventListener("keydown", (e: KeyboardEvent) => {
   if (/^[0-9.]$/.test(e.key)) {
     appendValue(e.key);
   } else if (["+", "-", "*", "/"].includes(e.key)) {
-    appendValue(e.key);
-  } else if (e.key === "(" || e.key === ")") {
     appendValue(e.key);
   } else if (e.key === "Enter" || e.key === "=") {
     e.preventDefault();

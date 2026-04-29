@@ -64,8 +64,6 @@ const (
 	MINUS
 	MULTIPLY
 	DIVIDE
-	LPAREN
-	RPAREN
 )
 
 type Token struct {
@@ -123,10 +121,6 @@ func tokenize(expr string) ([]Token, error) {
 			tokens = append(tokens, Token{Type: MULTIPLY})
 		case '/':
 			tokens = append(tokens, Token{Type: DIVIDE})
-		case '(':
-			tokens = append(tokens, Token{Type: LPAREN})
-		case ')':
-			tokens = append(tokens, Token{Type: RPAREN})
 		default:
 			return nil, fmt.Errorf("invalid character")
 		}
@@ -136,23 +130,15 @@ func tokenize(expr string) ([]Token, error) {
 	return tokens, nil
 }
 
-// Parser with operator precedence (precedence climbing)
-
-type Parser struct {
-	tokens []Token
-	pos    int
-}
-
-func precedence(op TokenType) int {
-	switch op {
-	case PLUS, MINUS:
-		return 1
-	case MULTIPLY, DIVIDE:
-		return 2
-	}
-	return 0
-}
-
+// Flat 2-pass evaluator — no recursion, no precedence climbing.
+//
+// Pass 1: scan left to right, collapse * and / immediately.
+// Pass 2: scan left to right, collapse + and -.
+//
+// Example: "2 + 3 * 4 - 1"
+//   tokens: [2, +, 3, *, 4, -, 1]
+//   pass1:  [2, +, 12, -, 1]      (3*4=12)
+//   pass2:  14                     (2+12-1)
 func evaluate(expr string) (float64, error) {
 	tokens, err := tokenize(expr)
 	if err != nil {
@@ -162,64 +148,37 @@ func evaluate(expr string) (float64, error) {
 		return 0, fmt.Errorf("empty expression")
 	}
 
-	p := &Parser{tokens: tokens}
-	result := p.parseBinary(0)
+	// Pass 1: handle * and /
+	var pass1 []Token
+	for i := 0; i < len(tokens); i++ {
+		if tokens[i].Type == MULTIPLY || tokens[i].Type == DIVIDE {
+			left := pass1[len(pass1)-1].Value
+			right := tokens[i+1].Value
+			var result float64
+			if tokens[i].Type == MULTIPLY {
+				result = left * right
+			} else {
+				if right != 0 {
+					result = left / right
+				}
+			}
+			pass1[len(pass1)-1] = Token{Type: NUMBER, Value: result}
+			i++ // skip the number we just consumed
+		} else {
+			pass1 = append(pass1, tokens[i])
+		}
+	}
 
-	if p.pos < len(tokens) {
-		return 0, fmt.Errorf("invalid expression")
+	// Pass 2: handle + and -
+	result := pass1[0].Value
+	for i := 1; i < len(pass1); i += 2 {
+		switch pass1[i].Type {
+		case PLUS:
+			result += pass1[i+1].Value
+		case MINUS:
+			result -= pass1[i+1].Value
+		}
 	}
 
 	return result, nil
-}
-
-func (p *Parser) parseBinary(minPrec int) float64 {
-	left := p.parseFactor()
-
-	for p.pos < len(p.tokens) {
-		op := p.tokens[p.pos].Type
-		prec := precedence(op)
-		if prec < minPrec || prec == 0 {
-			break
-		}
-		p.pos++
-		right := p.parseBinary(prec + 1)
-		switch op {
-		case PLUS:
-			left += right
-		case MINUS:
-			left -= right
-		case MULTIPLY:
-			left *= right
-		case DIVIDE:
-			if right != 0 {
-				left /= right
-			}
-		}
-	}
-
-	return left
-}
-
-func (p *Parser) parseFactor() float64 {
-	if p.pos >= len(p.tokens) {
-		return 0
-	}
-
-	token := p.tokens[p.pos]
-
-	if token.Type == NUMBER {
-		p.pos++
-		return token.Value
-	}
-
-	if token.Type == LPAREN {
-		p.pos++
-		result := p.parseBinary(0)
-		if p.pos < len(p.tokens) && p.tokens[p.pos].Type == RPAREN {
-			p.pos++
-		}
-		return result
-	}
-
-	return 0
 }
