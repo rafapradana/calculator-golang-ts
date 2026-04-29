@@ -55,7 +55,7 @@ func sendError(w http.ResponseWriter, msg string, code int) {
 }
 
 // Token represents either a number or an operator.
-// Op is '+', '-', '*', '/' for operators; 0 for numbers.
+// Op is 0 for numbers; '+', '-', '*', '/' for operators.
 type Token struct {
 	IsNumber bool
 	Op       byte

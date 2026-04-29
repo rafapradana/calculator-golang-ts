@@ -21,8 +21,8 @@ function appendValue(value: string): void {
   if (OPERATORS.includes(value) && expression === "") {
     if (value === "-") {
       expression = value;
+      updateDisplay();
     }
-    updateDisplay();
     return;
   }
 
@@ -33,7 +33,7 @@ function appendValue(value: string): void {
   }
 
   if (value === "." && expression !== "") {
-    const parts = expression.split(/[\+\-\*\/]/);
+    const parts = expression.split(/[+*/-]/);
     const currentNumber = parts[parts.length - 1];
     if (currentNumber.includes(".")) {
       return;
