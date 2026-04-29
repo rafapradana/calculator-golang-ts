@@ -118,12 +118,17 @@ func tokenize(expr string) ([]Token, error) {
 		i++
 	}
 
-	// validate: expression must start and end with a number
+	// validate: must start and end with number, no consecutive operators
 	if len(tokens) > 0 && !tokens[0].IsNumber {
 		return nil, fmt.Errorf("invalid expression")
 	}
 	if len(tokens) > 0 && !tokens[len(tokens)-1].IsNumber {
 		return nil, fmt.Errorf("invalid expression")
+	}
+	for i := 1; i < len(tokens)-1; i++ {
+		if !tokens[i].IsNumber && !tokens[i+1].IsNumber {
+			return nil, fmt.Errorf("invalid expression")
+		}
 	}
 
 	return tokens, nil
