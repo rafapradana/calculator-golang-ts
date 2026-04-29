@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #37352f;
+    }
+
+    .calculator {
+      width: 320px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .display {
+      padding: 24px 20px 16px;
+      text-align: right;
+      border-bottom: 1px solid #e0e0e0;
+      min-height: 90px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .expression {
+      font-size: 14px;
+      color: #9b9a97;
+      margin-bottom: 4px;
+      min-height: 20px;
+      word-break: break-all;
+    }
+
+    .result {
+      font-size: 32px;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    button {
+      padding: 18px;
+      font-size: 16px;
+      font-family: inherit;
+      border: none;
+      border-right: 1px solid #e0e0e0;
+      border-bottom: 1px solid #e0e0e0;
+      background: #fff;
+      color: #37352f;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #f7f6f3;
+    }
+
+    button:active {
+      background: #efefef;
+    }
+
+    button.ac {
+      color: #eb5757;
+    }
+
+    button.operator {
+      color: #2eaadc;
+    }
+
+    button.equals {
+      background: #37352f;
+      color: #fff;
+    }
+
+    button.equals:hover {
+      background: #2f2e29;
+    }
+
+    button.zero {
+      grid-column: span 2;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="display">
+      <div class="expression" id="expression"></div>
+      <div class="result" id="result">0</div>
+    </div>
+    <div class="buttons">
+      <button class="ac" data-action="clear">AC</button>
+      <button class="operator" data-value="(">(</button>
+      <button class="operator" data-value=")">)</button>
+      <button class="operator" data-value="/">÷</button>
+      <button data-value="7">7</button>
+      <button data-value="8">8</button>
+      <button data-value="9">9</button>
+      <button class="operator" data-value="*">×</button>
+      <button data-value="4">4</button>
+      <button data-value="5">5</button>
+      <button data-value="6">6</button>
+      <button class="operator" data-value="-">−</button>
+      <button data-value="1">1</button>
+      <button data-value="2">2</button>
+      <button data-value="3">3</button>
+      <button class="operator" data-value="+">+</button>
+      <button class="zero" data-value="0">0</button>
+      <button data-value=".">.</button>
+      <button class="equals" data-action="calculate">=</button>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
