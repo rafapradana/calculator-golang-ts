@@ -6,21 +6,21 @@ const OPERATORS = ["+", "-", "*", "/"];
 let expression = "";
 let lastResult: string | null = null;
 
-function showError(msg: string): void {
+function showError(msg: string) {
   resultEl.textContent = msg;
   resultEl.classList.add("error");
 }
 
-function clearError(): void {
+function clearError() {
   resultEl.classList.remove("error");
 }
 
-function updateDisplay(): void {
+function updateDisplay() {
   clearError();
   expressionEl.textContent = expression;
 }
 
-function appendValue(value: string): void {
+function appendValue(value: string) {
   const lastChar = expression.slice(-1);
 
   if (lastResult !== null && !OPERATORS.includes(value)) {
@@ -54,14 +54,14 @@ function appendValue(value: string): void {
   updateDisplay();
 }
 
-function clearAll(): void {
+function clearAll() {
   expression = "";
   lastResult = null;
   resultEl.textContent = "0";
   updateDisplay();
 }
 
-function backspace(): void {
+function backspace() {
   if (lastResult !== null) {
     clearAll();
     return;
@@ -73,7 +73,7 @@ function backspace(): void {
   updateDisplay();
 }
 
-async function calculate(): Promise<void> {
+async function calculate() {
   if (expression === "") return;
 
   try {
