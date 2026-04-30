@@ -54,8 +54,6 @@ func sendError(w http.ResponseWriter, msg string, code int) {
 	json.NewEncoder(w).Encode(Response{Error: msg})
 }
 
-// Token represents either a number or an operator.
-// Op is 0 for numbers; '+', '-', '*', '/' for operators.
 type Token struct {
 	IsNumber bool
 	Op       byte
@@ -118,7 +116,6 @@ func tokenize(expr string) ([]Token, error) {
 		i++
 	}
 
-	// validate: must start and end with number, no consecutive operators
 	if len(tokens) > 0 && !tokens[0].IsNumber {
 		return nil, fmt.Errorf("invalid expression")
 	}
@@ -134,7 +131,6 @@ func tokenize(expr string) ([]Token, error) {
 	return tokens, nil
 }
 
-// Flat 2-pass evaluator.
 func evaluate(expr string) (float64, error) {
 	tokens, err := tokenize(expr)
 	if err != nil {
@@ -144,7 +140,6 @@ func evaluate(expr string) (float64, error) {
 		return 0, fmt.Errorf("empty expression")
 	}
 
-	// Pass 1: handle * and /
 	var pass1 []Token
 	for i := 0; i < len(tokens); i++ {
 		if tokens[i].Op == '*' || tokens[i].Op == '/' {
@@ -160,13 +155,12 @@ func evaluate(expr string) (float64, error) {
 				result = left / right
 			}
 			pass1[len(pass1)-1] = Token{IsNumber: true, Value: result}
-			i++ // skip the number we just consumed
+			i++ 
 		} else {
 			pass1 = append(pass1, tokens[i])
 		}
 	}
 
-	// Pass 2: handle + and -
 	result := pass1[0].Value
 	for i := 1; i < len(pass1); i += 2 {
 		if pass1[i].Op == '+' {
