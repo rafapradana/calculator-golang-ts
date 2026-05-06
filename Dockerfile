@@ -5,9 +5,10 @@ RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-FROM golang:1.21-alpine AS backend-builder
+FROM golang:1.25-alpine AS backend-builder
 WORKDIR /app/backend
-COPY backend/go.mod ./
+COPY backend/go.mod backend/go.sum ./
+RUN go mod download
 COPY backend/main.go ./
 RUN go build -o server .
 

@@ -1,11 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"strconv"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+	"github.com/gofiber/fiber/v3/middleware/static"
 )
 
 type Request struct {
@@ -18,40 +20,32 @@ type Response struct {
 }
 
 func main() {
-	fs := http.FileServer(http.Dir("./dist"))
-	http.Handle("/", fs)
-	http.HandleFunc("/api/calculate", handleCalculate)
+	app := fiber.New()
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"http://localhost:3000"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Accept"},
+	}))
+
+	app.Use("/", static.New("./dist"))
+	app.Post("/api/calculate", handleCalculate)
 
 	fmt.Println("Server running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(app.Listen(":8080"))
 }
 
-func handleCalculate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func handleCalculate(c fiber.Ctx) error {
 	var req Request
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendError(w, "Invalid request", http.StatusBadRequest)
-		return
+	if err := c.Bind().JSON(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{Error: "Invalid request"})
 	}
 
 	result, err := evaluate(req.Expression)
 	if err != nil {
-		sendError(w, err.Error(), http.StatusBadRequest)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(Response{Error: err.Error()})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(Response{Result: result})
-}
-
-func sendError(w http.ResponseWriter, msg string, code int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(Response{Error: msg})
+	return c.JSON(Response{Result: result})
 }
 
 type Token struct {
